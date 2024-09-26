@@ -6,15 +6,8 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let http = tauri_invoke_http::Invoke::new(["*"]);
     tauri::Builder::default()
-        .invoke_system(http.initialization_script())
-        .setup(move |app| {
-            http.start(app.handle());
-            Ok(())
-        })
         .plugin(tauri_plugin_http::init())
-        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

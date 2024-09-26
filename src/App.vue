@@ -2,125 +2,137 @@
 import { instance, useAxios } from '@/services';
 import { axios } from '@/services/request';
 import { fetch } from '@tauri-apps/plugin-http';
-import { reactive } from 'vue';
+import { showConfirmDialog } from 'vant';
 
-const formModel = reactive({
-  username: 'qingxin',
-  password: '123456'
-})
+const data = { apiFox: true, isMock: true }
+const params = { isParams: true, q: 2 }
+const url = `https://echo.apifox.com/post`
+const method = 'GET'
 
-const { isLoading, error, execute } = useAxios({
-  method: 'POST',
-  url: `https://sun-platform.vfiee.cn/user/login`
+const {
+  data: response,
+  error,
+  execute
+} = useAxios({
+  method,
+  url
 })
 
 async function onSubmit() {
-  await execute({ data: formModel }).catch(console.error)
-  if (error.value) return
-  showSuccessToast('登录成功')
+  await execute({ data, params }).catch(console.error)
+  if (error.value) {
+    await showConfirmDialog({ message: JSON.stringify(error.value) })
+    return
+  }
+  await showConfirmDialog({ message: JSON.stringify(response.value) })
 }
 
 const getJson = async () => {
-  const response = await instance(`https://sun-platform.vfiee.cn/user/login`, {
-    method: 'POST',
-    data: formModel,
+  const response = await instance(url, {
+    method,
+    data,
+    params,
     headers: {
       'Content-Type': 'application/json'
     }
-  }).catch((err) => {
-    showDialog({ message: `error:` + JSON.stringify(err) })
+  }).catch(async (err) => {
+    await showConfirmDialog({ message: JSON.stringify(err) })
   })
 
-  showDialog({ message: `success:` + JSON.stringify(response) })
+  await showConfirmDialog({ message: JSON.stringify(response) })
 }
 
 const getJson2 = async () => {
-  const response = await fetch(`https://sun-platform.vfiee.cn/user/login`, {
-    method: 'POST',
-    body: JSON.stringify(formModel),
+  const res = await fetch(url, {
+    method,
+    body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json'
     }
-  }).catch((err) => {
-    showDialog({ message: `error:` + JSON.stringify(err) })
+  }).catch(async (err) => {
+    await showConfirmDialog({ message: JSON.stringify(err) })
   })
-  const data = await response?.json()
-  showDialog({ message: `success:` + JSON.stringify(data) })
+  await showConfirmDialog({ message: JSON.stringify(await res?.json()) })
+}
+
+const getJson4 = async () => {
+  const res = await window
+    .fetch(url, {
+      method,
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .catch(async (err) => {
+      await showConfirmDialog({ message: JSON.stringify(err) })
+    })
+  await showConfirmDialog({ message: JSON.stringify(await res?.json()) })
 }
 const getJson3 = async () => {
-  const data = await axios(`/user/login`, {
-    method: 'POST',
-    data: formModel,
+  const response = await axios(url, {
+    method,
+    data,
+    params,
     headers: {
       'Content-Type': 'application/json'
     }
-  }).catch((err) => {
-    showDialog({ message: `error:` + JSON.stringify(err) })
+  }).catch(async (err) => {
+    await showConfirmDialog({ message: JSON.stringify(err) })
   })
-  showDialog({ message: `success:` + JSON.stringify(data) })
+  await showConfirmDialog({ message: JSON.stringify(response) })
 }
 </script>
 <template>
   <div
     class="flex flex-col items-center w-full h-full overflow-hidden pt-36 bg-white"
   >
-    <van-form class="pt-20 w-full" colon label-width="3em" @submit="onSubmit">
-      <van-cell-group inset>
-        <van-field
-          v-model="formModel.username"
-          name="username"
-          label="账号"
-          placeholder="请输入用户名或邮箱"
-          :rules="[{ required: true, message: '请输入用户名或邮箱' }]"
-        />
-        <van-field
-          v-model="formModel.password"
-          type="password"
-          name="password"
-          label="密码"
-          placeholder="密码"
-          :rules="[{ required: true, message: '请填写密码' }]"
-        />
-      </van-cell-group>
-      <div class="mt-16 mr-10 ml-10">
-        <van-button
-          class="van-haptics-feedback"
-          round
-          block
-          type="primary"
-          native-type="submit"
-          :loading="isLoading"
-        >
-          提交
-        </van-button>
-        <van-button
-          class="van-haptics-feedback mt-10"
-          round
-          block
-          type="primary"
-          @click="getJson"
-        >
-          instance
-        </van-button>
-        <van-button
-          class="van-haptics-feedback mt-10"
-          round
-          block
-          type="primary"
-          @click="getJson2"
-        >
-          fetch
-        </van-button>
-        <van-button
-          class="van-haptics-feedback mt-10"
-          round
-          block
-          type="primary"
-          @click="getJson3"
-        >
-          axios
-        </van-button>
-      </div>
-    </van-form>
+    <div class="mt-16 mr-10 ml-10">
+      <van-button
+        class="van-haptics-feedback"
+        round
+        block
+        type="primary"
+        @click="onSubmit"
+      >
+        @vueUse/useAxios
+      </van-button>
+      <van-button
+        class="van-haptics-feedback mt-10"
+        round
+        block
+        type="primary"
+        @click="getJson"
+      >
+        axios instance
+      </van-button>
+      <van-button
+        class="van-haptics-feedback mt-10"
+        round
+        block
+        type="primary"
+        @click="getJson4"
+      >
+        window.fetch
+      </van-button>
+      <van-button
+        class="van-haptics-feedback mt-10"
+        round
+        block
+        type="primary"
+        @click="getJson2"
+      >
+        tauri-plugin-http.fetch
+      </van-button>
+      <van-button
+        class="van-haptics-feedback mt-10"
+        round
+        block
+        type="primary"
+        @click="getJson3"
+      >
+        axios
+      </van-button>
+    </div>
   </div>
 </template>
